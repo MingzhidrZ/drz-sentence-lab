@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr.Z 句子实验室 · 第1句</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  header { background: linear-gradient(135deg,#1e3a8a,#0e7490); padding: 20px 24px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  header .logo { font-size: 34px; }
+  header h1 { font-size: 20px; }
+  header p { font-size: 13px; opacity:.85; }
+  .badge { margin-left:auto; background:rgba(255,255,255,.15); padding:6px 14px; border-radius:20px; font-size:13px; }
+  main { max-width: 860px; margin: 0 auto; padding: 20px; }
+  .tabs { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; }
+  .tab { padding:8px 16px; border-radius:20px; background:#1e293b; border:1px solid #334155; cursor:pointer; white-space:nowrap; font-size:14px; }
+  .tab.active { background:#0e7490; border-color:#22d3ee; }
+  .card { background:#1e293b; border:1px solid #334155; border-radius:14px; padding:24px; margin-top:16px; }
+  .progress-bar { height:6px; background:#334155; border-radius:3px; overflow:hidden; margin-bottom:16px; }
+  .progress-bar > div { height:100%; background:linear-gradient(90deg,#22d3ee,#34d399); width:0; transition:width .3s; }
+  .sent-num { color:#94a3b8; font-size:13px; }
+  .sent-en { font-size: 30px; font-weight:600; margin:10px 0 6px; line-height:1.3; }
+  .sent-en .w { cursor:pointer; padding:2px 4px; border-radius:6px; transition:.15s; }
+  .sent-en .w:hover { background:#334155; }
+  .w.ok { color:#34d399; }
+  .w.bad { color:#f87171; background:rgba(248,113,113,.12); }
+  .sent-cn { color:#94a3b8; font-size:16px; }
+  .grammar-note { margin-top:14px; font-size:13px; background:#172554; border:1px solid #1d4ed8; border-radius:10px; padding:10px 14px; color:#bfdbfe; }
+  .controls { display:flex; gap:12px; margin-top:22px; flex-wrap:wrap; align-items:center; }
+  button { border:none; cursor:pointer; font-size:15px; padding:12px 22px; border-radius:10px; font-weight:600; transition:.15s; }
+  .btn-play { background:#0e7490; color:#fff; }
+  .btn-play:hover { background:#0891b2; }
+  .btn-rec { background:#16a34a; color:#fff; min-width:170px; }
+  .btn-rec.recording { background:#dc2626; animation:pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity:.6; } }
+  .btn-nav { background:#334155; color:#e2e8f0; }
+  .btn-nav:disabled { opacity:.35; cursor:default; }
+  .score-box { display:none; margin-top:20px; background:#0f172a; border-radius:12px; padding:16px; }
+  .score-line { display:flex; align-items:center; gap:14px; }
+  .score-big { font-size:40px; font-weight:800; }
+  .score-msg { color:#94a3b8; font-size:14px; }
+  .word-diff { margin-top:12px; font-size:15px; line-height:1.9; }
+  .word-diff .miss { color:#f87171; text-decoration:line-through; margin-right:6px; }
+  .word-diff .extra { color:#fbbf24; margin-right:6px; }
+  .sent-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:8px; margin-top:16px; }
+  .sent-item { background:#1e293b; border:1px solid #334155; border-radius:10px; padding:10px 12px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; gap:6px; }
+  .sent-item:hover { border-color:#22d3ee; }
+  .sent-item .st { flex-shrink:0; }
+  .tip { color:#64748b; font-size:12px; margin-top:14px; }
+  .record-note { font-size:12px; color:#fbbf24; margin-top:10px; display:none; }
+  .brand { display:flex; gap:14px; margin-top:20px; align-items:center; flex-wrap:wrap; background:#0f172a; border-radius:12px; padding:14px; }
+  .brand img { height:72px; border-radius:10px; }
+  .brand .slot { display:none; align-items:center; gap:6px; color:#475569; font-size:12px; height:72px; padding:0 14px; border:1px dashed #334155; border-radius:10px; }
+  .brand .qr-box { margin-left:auto; text-align:center; }
+  .brand .qr-box span { display:block; color:#94a3b8; font-size:12px; margin-top:4px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🧪</div>
+  <div>
+    <h1>Dr.Z 句子实验室 · 第 1 句</h1>
+    <p>核心句型：The + 名词 + is + 形容词. ｜ 测：定冠词 / 系动词 / 形容词位置</p>
+  </div>
+  <div class="badge" id="totalScore">总分 --</div>
+</header>
+<main>
+  <div class="tabs" id="tabs"></div>
+  <div class="card" id="practiceCard">
+    <div class="progress-bar"><div id="progFill"></div></div>
+    <div class="sent-num" id="sentNum"></div>
+    <div class="sent-en" id="sentEn"></div>
+    <div class="sent-cn" id="sentCn"></div>
+    <div class="grammar-note" id="gramNote">点击任意单词可单独听发音。跟读时注意：冠词 <b>The</b> 不能丢、系动词 <b>is</b> 要在名词后面、形容词放在 <b>is</b> 之后。</div>
+    <div class="controls">
+      <button class="btn-play" id="btnPlay">🔊 听示范</button>
+      <button class="btn-play" id="btnSlow" style="background:#155e75">🐢 慢速</button>
+      <button class="btn-rec" id="btnRec">🎤 按住开始跟读</button>
+      <button class="btn-nav" id="btnPrev">← 上一句</button>
+      <button class="btn-nav" id="btnNext">下一句 →</button>
+    </div>
+    <div class="record-note" id="recNote">请允许浏览器使用麦克风；如无反应请检查是否使用 Chrome / Edge 打开。</div>
+    <div class="score-box" id="scoreBox">
+      <div class="score-line">
+        <div class="score-big" id="scoreNum">--</div>
+        <div class="score-msg" id="scoreMsg"></div>
+      </div>
+      <div class="word-diff" id="wordDiff"></div>
+    </div>
+    <div class="brand" id="brand" style="padding:0; overflow:hidden;">
+      <img src="banner.png" alt="Dr.Z的英语魔法教室" style="width:100%; height:auto; display:block;" id="bannerImg">
+      <div class="slot" id="bannerSlot" style="display:flex; height:60px;">🖼 把 banner.png 放入本文件夹即可显示卡通形象与公众号二维码</div>
+    </div>
+    <div class="tip">💡 提示：跟读识别使用浏览器内置语音识别（Chrome/Edge），评分基于逐词对比（忽略大小写与标点）。</div>
+  </div>
+  <div id="sentList"></div>
+</main>
+<script>
+const THEMES = [
+  { name:"一、颜色 Colors", color:"#f472b6", items:[
+    ["The apple is red.","苹果是红的。"],["The banana is yellow.","香蕉是黄的。"],
+    ["The leaf is green.","叶子是绿的。"],["The ball is blue.","球是蓝的。"],
+    ["The cat is white.","猫是白的。"],["The umbrella is black.","伞是黑的。"]]},
+  { name:"二、外观 Appearance", color:"#fbbf24", items:[
+    ["The elephant is big.","大象是大的。"],["The mouse is small.","老鼠是小的。"],
+    ["The giraffe is tall.","长颈鹿是高的。"],["The road is long.","路是长的。"],
+    ["The box is heavy.","箱子是重的。"],["The flower is beautiful.","花是美的。"],
+    ["The baby is cute.","宝宝是可爱的。"],["The room is clean.","房间是干净的。"]]},
+  { name:"三、感受 Feelings", color:"#34d399", items:[
+    ["The boy is happy.","男孩是开心的。"],["The girl is sad.","女孩是难过的。"],
+    ["The child is excited.","孩子是兴奋的。"],["The student is nervous.","学生是紧张的。"],
+    ["The teacher is angry.","老师是生气的。"],["The baby is sleepy.","宝宝是困的。"],
+    ["The winner is proud.","获胜者是骄傲的。"],["The audience is excited.","观众是兴奋的。"]]},
+  { name:"四、状态 Conditions", color:"#60a5fa", items:[
+    ["The water is cold.","水是凉的。"],["The soup is hot.","汤是热的。"],
+    ["The room is quiet.","房间是安静的。"],["The kitchen is dirty.","厨房是脏的。"],
+    ["The road is wet.","路是湿的。"],["The door is open.","门是开着的。"],
+    ["The shop is busy.","商店是忙碌的。"],["The man is tired.","男人是累的。"]]},
+  { name:"五、职业场景 Singer at a Bar", color:"#a78bfa", items:[
+    ["The singer is talented.","歌手是有才华的。"],["The singer is confident.","歌手是自信的。"],
+    ["The singer is nervous.","歌手是紧张的。"],["The singer is tired.","歌手是累的。"],
+    ["The singer is popular.","歌手是受欢迎的。"],["The bartender is busy.","酒保是忙碌的。"],
+    ["The waiter is friendly.","服务员是友好的。"],["The customer is happy.","顾客是开心的。"]]}
+];
+// 展开为平铺列表
+const SENTENCES = [];
+THEMES.forEach((t, ti) => t.items.forEach((it, ii) => SENTENCES.push({ en:it[0], cn:it[1], theme:ti, idx:ii+1 })));
+
+// 图片素材检测：文件夹里有 banner.png 就显示
+window.addEventListener("load", ()=>{
+  const b = document.getElementById("bannerImg"), bs = document.getElementById("bannerSlot");
+  b.onerror = ()=>{ b.style.display="none"; bs.style.display="flex"; };
+});
+
+let cur = 0;
+let scores = JSON.parse(localStorage.getItem("drz_s1_scores") || "{}");
+let rec = null, recActive = false;
+
+const norm = w => w.toLowerCase().replace(/[^a-z']/g,'');
+
+function renderTabs(){
+  const el = document.getElementById("tabs");
+  el.innerHTML = THEMES.map((t,i)=>`<div class="tab ${i===SENTENCES[cur].theme?'active':''}" onclick="jumpTheme(${i})" style="border-bottom:3px solid ${t.color}">${t.name}</div>`).join("");
+}
+window.jumpTheme = function(ti){
+  const k = SENTENCES.findIndex(s=>s.theme===ti);
+  if(k>=0){ cur=k; render(); }
+};
+
+function markWords(target, spoken){
+  const tw = target.map(norm), sw = spoken.map(norm);
+  const flags = tw.map(()=>false);
+  let j = 0;
+  for(let i=0;i<tw.length;i++){
+    if(j<sw.length && sw[j]===tw[i]){ flags[i]=true; j++; }
+    else if(sw.includes(tw[i])){ flags[i]=true; } // 词说了但顺序不对 → 形容词位置错误也算过但提示
+  }
+  return flags;
+}
+
+function render(){
+  const s = SENTENCES[cur];
+  renderTabs();
+  document.getElementById("sentNum").textContent = `${s.theme+1}.${s.idx} （第 ${cur+1} / ${SENTENCES.length} 句）`;
+  document.getElementById("sentEn").innerHTML = s.en.split(" ").map(w=>`<span class="w" onclick="speak('${w.replace(/'/g,"\\'")}')">${w}</span>`).join(" ");
+  document.getElementById("sentCn").textContent = s.cn;
+  document.getElementById("progFill").style.width = (Object.keys(scores).length/SENTENCES.length*100)+"%";
+  document.getElementById("btnPrev").disabled = cur===0;
+  document.getElementById("btnNext").disabled = cur===SENTENCES.length-1;
+  document.getElementById("scoreBox").style.display = "none";
+  document.getElementById("recNote").style.display = "none";
+  updateTotal();
+  renderList();
+}
+window.speak = function(text, slow){
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US"; u.rate = slow ? 0.6 : 0.95;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+};
+window.renderList = function(){
+  const el = document.getElementById("sentList");
+  el.innerHTML = SENTENCES.map((s,i)=>{
+    const sc = scores[i];
+    const st = sc===undefined ? "" : `<span class="st" style="color:${sc>=90?'#34d399':sc>=70?'#fbbf24':'#f87171'}">${sc}</span>`;
+    return `<div class="sent-item" onclick="cur=${i};render()"><span>${i+1}. ${s.en}</span>${st}</div>`;
+  }).join("");
+};
+function updateTotal(){
+  const vals = Object.values(scores);
+  const el = document.getElementById("totalScore");
+  el.textContent = vals.length ? `总分 ${Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)}` : "总分 --";
+}
+
+document.getElementById("btnPlay").onclick = ()=> speak(SENTENCES[cur].en);
+document.getElementById("btnSlow").onclick = ()=> speak(SENTENCES[cur].en, true);
+
+const btnRec = document.getElementById("btnRec");
+btnRec.onclick = ()=>{
+  if(recActive){ rec && rec.stop(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ document.getElementById("recNote").style.display="block"; return; }
+  rec = new SR();
+  rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 5;
+  rec.onstart = ()=>{ recActive=true; btnRec.classList.add("recording"); btnRec.textContent="⏹ 正在跟读…点此结束"; };
+  rec.onend = ()=>{ recActive=false; btnRec.classList.remove("recording"); btnRec.textContent="🎤 开始跟读"; };
+  rec.onerror = (e)=>{ recActive=false; btnRec.classList.remove("recording"); btnRec.textContent="🎤 开始跟读";
+    if(e.error==="not-allowed"){ alert("请允许浏览器使用麦克风"); } };
+  rec.onresult = (ev)=>{
+    const target = SENTENCES[cur].en.split(/\s+/);
+    let best = null;
+    for(let r=0;r<ev.results[0].length;r++){
+      const alt = ev.results[0][r].transcript.trim();
+      if(!alt) continue;
+      const tw = target.map(norm), sw = alt.split(/\s+/).map(norm);
+      // LCS 命中数评分
+      const dp = Array.from({length:tw.length+1},()=>new Array(sw.length+1).fill(0));
+      for(let i=1;i<=tw.length;i++) for(let j=1;j<=sw.length;j++)
+        dp[i][j] = tw[i-1]===sw[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j],dp[i][j-1]);
+      const hits = dp[tw.length][sw.length];
+      const score = Math.round(hits/tw.length*100);
+      if(!best || score>best.score) best = { alt, sw, score };
+    }
+    showScore(best);
+  };
+  rec.start();
+};
+
+function showScore(best){
+  const s = SENTENCES[cur];
+  const target = s.en.split(/\s+/);
+  const flags = markWords(target, best.sw);
+  document.getElementById("scoreBox").style.display="block";
+  const num = document.getElementById("scoreNum");
+  num.textContent = best.score;
+  num.style.color = best.score>=90 ? "#34d399" : best.score>=70 ? "#fbbf24" : "#f87171";
+  let msg = best.score>=90 ? "🎉 太棒了！定冠词、系动词、形容词位置全对！" :
+            best.score>=70 ? "👍 不错！看看标红的词再练一遍。" : "💪 再听一遍示范，注意 The…is…形容词 的顺序。";
+  // 检查关键词
+  const tw = target.map(norm), sw = best.sw;
+  if(!sw.includes("the")) msg += " ⚠️ 冠词 The 漏读了！";
+  if(!sw.includes("is")) msg += " ⚠️ 系动词 is 漏读了！";
+  if(flags.some((f,i)=>!f)) msg += " ⚠️ 有词顺序不对或读错。";
+  document.getElementById("scoreMsg").textContent = msg;
+  document.getElementById("wordDiff").innerHTML =
+    target.map((w,i)=> flags[i] ? `<span class="w ok">${w}</span>` : `<span class="w bad">${w}</span>`).join(" ")
+    + ` <span style="color:#64748b">｜ 听到的是：</span> ${best.alt}`;
+  scores[cur] = best.score;
+  localStorage.setItem("drz_s1_scores", JSON.stringify(scores));
+  updateTotal(); renderList();
+}
+
+document.getElementById("btnPrev").onclick = ()=>{ if(cur>0){ cur--; render(); } };
+document.getElementById("btnNext").onclick = ()=>{ if(cur<SENTENCES.length-1){ cur++; render(); } };
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowRight") document.getElementById("btnNext").click();
+  if(e.key==="ArrowLeft") document.getElementById("btnPrev").click();
+});
+render();
+</script>
+</body>
+</html>
