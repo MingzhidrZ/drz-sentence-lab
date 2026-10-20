@@ -89,8 +89,8 @@
       <div class="word-diff" id="wordDiff"></div>
     </div>
     <div class="brand" id="brand" style="padding:0; overflow:hidden;">
-      <img src="banner.png" alt="Dr.Z的英语魔法教室" style="width:100%; height:auto; display:block;" id="bannerImg">
-      <div class="slot" id="bannerSlot" style="display:flex; height:60px;">🖼 把 banner.png 放入本文件夹即可显示卡通形象与公众号二维码</div>
+      <div class="slot" id="bannerSlot" style="display:none; height:60px;"></div>
+      <img src="banner.jpg" alt="Dr.Z的英语魔法教室" style="width:100%; height:auto; display:block;" id="bannerImg">
     </div>
     <div class="tip">💡 提示：跟读识别使用浏览器内置语音识别（Chrome/Edge），评分基于逐词对比（忽略大小写与标点）。</div>
   </div>
@@ -130,8 +130,19 @@ THEMES.forEach((t, ti) => t.items.forEach((it, ii) => SENTENCES.push({ en:it[0],
 // 图片素材检测：文件夹里有 banner.png 就显示
 window.addEventListener("load", ()=>{
   const b = document.getElementById("bannerImg"), bs = document.getElementById("bannerSlot");
-  b.onerror = ()=>{ b.style.display="none"; bs.style.display="flex"; };
+  if (b.complete) {
+    if (b.naturalWidth > 0) { bs.style.display="none"; }
+    else { showBannerError(); }
+  }
+  b.onload = ()=>{ bs.style.display="none"; };
+  b.onerror = showBannerError;
 });
+
+function showBannerError(){
+  const b = document.getElementById("bannerImg"), bs = document.getElementById("bannerSlot");
+  b.style.display="none"; bs.style.display="flex";
+  bs.innerHTML="🖼 横幅图加载失败，请检查网络后刷新";
+}
 
 let cur = 0;
 let scores = JSON.parse(localStorage.getItem("drz_s1_scores") || "{}");
